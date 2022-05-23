@@ -1,70 +1,241 @@
-# Getting Started with Create React App
+# React Hooks
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## useMemo
 
-## Available Scripts
+```jsx
+import { useState } from "react";
 
-In the project directory, you can run:
+function App() {
+  const [number, setNumber] = useState(0);
+  const [dark, setDark] = useState(false);
+  const doubleNumber = slowFunction(number);
 
-### `npm start`
+  const themeStyles = {
+    backgroundColor: dark ? "black" : "white",
+    color: dark ? "white" : "black",
+  };
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+  return (
+    <>
+      <input
+        type="number"
+        value={number}
+        onChange={(e) => setNumber(parseInt(e.target.value))}
+      />
+      <button onClick={() => setDark((prevDark) => !prevDark)}>
+        Change Theme
+      </button>
+      <div style={themeStyles}>{doubleNumber}</div>
+    </>
+  );
+}
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+function slowFunction(num) {
+  console.log("Calling Slow Function");
+  for (let i = 0; i < 1000000000; i++) {}
+  return num * 2;
+}
 
-### `npm test`
+export default App;
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+If we click the Change Theme button, we will see a delay because the SlowFunction is called every time the component is rendered. So we change state when clicking Change Theme. And that's something that should not happen because Change Theme has nothing to do with running the SlowFunction.
 
-### `npm run build`
+```jsx
+import { useState, useMemo } from "react";
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+function App() {
+  const [number, setNumber] = useState(0);
+  const [dark, setDark] = useState(false);
+  const doubleNumber = useMemo(() => {
+    return slowFunction(number);
+  }, [number]);
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+  const themeStyles = {
+    backgroundColor: dark ? "black" : "white",
+    color: dark ? "white" : "black",
+  };
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  return (
+    <>
+      <input
+        type="number"
+        value={number}
+        onChange={(e) => setNumber(parseInt(e.target.value))}
+      />
+      <button onClick={() => setDark((prevDark) => !prevDark)}>
+        Change Theme
+      </button>
+      <div style={themeStyles}>{doubleNumber}</div>
+    </>
+  );
+}
 
-### `npm run eject`
+function slowFunction(num) {
+  console.log("Calling Slow Function");
+  for (let i = 0; i < 1000000000; i++) {}
+  return num * 2;
+}
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+export default App;
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Referential Equality
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+In JavaScript we have referential equality in Objects & Arrays.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```js
+const themeStyles = {
+  name: "John Rambo",
+  nationality: "USA",
+};
 
-## Learn More
+// Copy
+const themeStyles2 = {
+  name: "John Rambo",
+  nationality: "USA",
+};
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+// Exercise
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+if (themeStyles === themeStyles2) {
+  console.log(true);
+} else {
+  console.log(false);
+}
 
-### Code Splitting
+// And the answer is?
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```js
+import { useState, useMemo, useEffect } from "react";
 
-### Analyzing the Bundle Size
+function App() {
+  const [number, setNumber] = useState(0);
+  const [dark, setDark] = useState(false);
+  const doubleNumber = useMemo(() => {
+    return slowFunction(number);
+  }, [number]);
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+  const themeStyles = {
+    backgroundColor: dark ? "black" : "white",
+    color: dark ? "white" : "black",
+  };
 
-### Making a Progressive Web App
+  useEffect(() => {
+    console.log("Theme Changed");
+  }, [themeStyles]);
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+  return (
+    <>
+      <input
+        type="number"
+        value={number}
+        onChange={(e) => setNumber(parseInt(e.target.value))}
+      />
+      <button onClick={() => setDark((prevDark) => !prevDark)}>
+        Change Theme
+      </button>
+      <div style={themeStyles}>{doubleNumber}</div>
+    </>
+  );
+}
 
-### Advanced Configuration
+function slowFunction(num) {
+  for (let i = 0; i < 1000000000; i++) {}
+  return num * 2;
+}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+export default App;
+```
 
-### Deployment
+When we update the input, we will see that the console.log('Theme Changed') it's being printed, and the reason for that it's because every time we render the component, we create an entirely new themeStyles object which is different than the previous one, even though their values are the same.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```js
+const themeStyles = useMemo(() => {
+  return {
+    backgroundColor: dark ? "black" : "white",
+    color: dark ? "white" : "black",
+  };
+}, [dark]);
+```
 
-### `npm run build` fails to minify
+Now, the themeStyles object it's being created only when we update the dark theme state. If we don't update the theme state, then when the component re-render, it will not create a new themeStyle object, and it will be referencing the same position in memory.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## useCallback
+
+```js
+import { useState, useEffect } from "react";
+
+function App() {
+  const [number, setNumber] = useState(1);
+  const [dark, setDark] = useState(false);
+
+  const getItems = () => {
+    return [number, number + 1, number + 2];
+  };
+
+  const theme = {
+    backgroundColor: dark ? "#333" : "#FFF",
+    color: dark ? "#FFF" : "#333",
+  };
+
+  return (
+    <div style={theme}>
+      <input
+        type="number"
+        value={number}
+        onChange={(e) => setNumber(parseInt(e.target.value))}
+      />
+      <button onClick={() => setDark((prevDark) => !prevDark)}>
+        Change Theme
+      </button>
+      <List getItems={getItems} />
+    </div>
+  );
+}
+
+function List({ getItems }) {
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    setItems(getItems());
+    console.log("Updating Items");
+  }, [getItems]);
+
+  return items.map((item) => <div key={item}>{item}</div>);
+}
+
+export default App;
+```
+
+If we update the input, we will see printed "Updating Items" which is spected because every time we update the input, the app rerenders and getItems function it's being created over and over again. The issue is that we also call the useEffect even when we update the theme state.
+
+```js
+const getItems = useCallback(() => {
+  return [number, number + 1, number + 2];
+}, [number]);
+```
+
+The difference between useMemo is that it returns a value, and useCallback returns the entire function. And wwith useCallback we can also pass parameters to our function.
+
+```js
+// List
+useEffect(() => {
+  setItems(getItems(5));
+  console.log("Updating Items");
+}, [getItems]);
+
+const getItems = useCallback(
+  (incrementeor) => {
+    return [
+      number + incrementor,
+      number + 1 + incrementor,
+      number + 2 + incrementor,
+    ];
+  },
+  [number]
+);
+```
+
+Usually, we use useCallback when using the function as argument dependency inside the useEffect hook.
